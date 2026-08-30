@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- `screenshots.appearance` 설정을 추가했습니다. `dark` 또는 `light` 를 지정하면 캡처 전에 시뮬레이터를 그 모드로 바꿉니다.
+
 ## 0.2.0
 
 - init 이 만드는 스크린샷 라우트가 `@oube/expo/screenshots` 의 `createScreenshotScene` 을 쓰도록 바뀌었습니다. 앱에 `@oube/expo` v0.3.0 이상이 필요합니다.

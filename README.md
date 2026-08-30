@@ -112,6 +112,7 @@ fastlane 명령어는 앱 폴더에서 실행합니다. 앱의 `fastlane/Fastfil
 ```
 
 - `build`: `local` 은 현재 Mac 에서 `eas build --local` 로 빌드하고, `eas-cloud` 는 EAS 서버에서 빌드한 파일을 내려받아 업로드합니다.
+- `screenshots.appearance`: `dark` 또는 `light`. 캡처 전에 시뮬레이터를 이 모드로 바꿉니다. 다크 모드 앱은 `dark` 로 지정합니다.
 - 베젤: 모든 앱이 같은 기기 프레임을 쓰도록 패키지에 `iphone-17-pro-max` 와 `ipad-pro-m4-13` 두 개만 포함합니다.
   다른 기기가 꼭 필요하면 앱 폴더 기준 PNG 경로를 지정합니다 (`.png` 로 끝나면 경로로 인식).
 - 폰트: 파일이 없으면 `fonts` 명령어가 고정된 출처(Google Fonts 의 특정 커밋에 있는 Noto Sans JP/SC/TC, Pretendard 1.3.9 릴리스)에서

@@ -69,6 +69,11 @@
       "properties": {
         "captureDelaySeconds": { "type": "number", "default": 3 },
         "statusBarTime": { "type": "string", "default": "9:41" },
+        "appearance": {
+          "type": "string",
+          "enum": ["light", "dark"],
+          "description": "캡처 전에 시뮬레이터를 지정한 라이트/다크 모드로 바꾼다. 지정하지 않으면 바꾸지 않는다"
+        },
         "devices": {
           "type": "object",
           "minProperties": 1,

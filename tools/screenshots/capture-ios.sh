@@ -37,6 +37,7 @@ SCHEME="$(jq -r '.scheme' "$CONFIG")"
 EXPECTED_WIDTH="$(jq -r --arg device "$DEVICE" '.screenshots.devices[$device].canvas[0]' "$CONFIG")"
 EXPECTED_HEIGHT="$(jq -r --arg device "$DEVICE" '.screenshots.devices[$device].canvas[1]' "$CONFIG")"
 STATUS_BAR_TIME="$(jq -r '.screenshots.statusBarTime // "9:41"' "$CONFIG")"
+APPEARANCE="$(jq -r '.screenshots.appearance // empty' "$CONFIG")"
 CAPTURE_DELAY="${SCREENSHOT_CAPTURE_DELAY:-$(jq -r '.screenshots.captureDelaySeconds // 3' "$CONFIG")}"
 CAPTURE_DIR="$PROJECT_DIR/store-assets/captures/$DEVICE"
 
@@ -80,6 +81,11 @@ reset_status_bar() {
   xcrun simctl status_bar "$UDID" clear >/dev/null 2>&1 || true
 }
 trap reset_status_bar EXIT
+
+# appearance 가 지정되어 있으면 캡처 전에 시뮬레이터를 그 라이트/다크 모드로 바꾼다
+if [[ -n "$APPEARANCE" ]]; then
+  xcrun simctl ui "$UDID" appearance "$APPEARANCE"
+fi
 
 xcrun simctl status_bar "$UDID" override \
   --time "$STATUS_BAR_TIME" \
