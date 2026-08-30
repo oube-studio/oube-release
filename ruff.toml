@@ -1,0 +1,7 @@
+# tools/ 는 앱의 python3 (macOS 기본 3.9) 로 실행되므로 그 문법에 맞춘다
+target-version = "py39"
+line-length = 110
+
+[lint]
+# E402: sys.path 조작 뒤 import 하는 자리를 noqa 로 표시해 의도를 남긴다
+extend-select = ["E402", "I", "UP", "B", "RUF"]

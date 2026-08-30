@@ -1,0 +1,54 @@
+{
+  "scheme": "<scheme>",
+  "ios": { "bundleId": "<ios bundle id>" },
+  "android": { "package": "<android package>" },
+  "build": "local",
+  "iap": false,
+  "locales": {
+    "ko": { "appStore": "ko", "play": "ko-KR", "storefront": "kr", "hl": "ko" },
+    "en": { "appStore": "en-US", "play": "en-US", "storefront": "us", "hl": "en" }
+  },
+  "screenshots": {
+    "devices": {
+      "iphone": {
+        "simulatorName": "iPhone 17 Pro Max",
+        "canvas": [1320, 2868],
+        "bezel": "iphone-17-pro-max",
+        "frameWidthFraction": 0.86,
+        "anchor": "bottom"
+      },
+      "ipad": {
+        "simulatorName": "iPad Pro 13-inch (M5)",
+        "canvas": [2064, 2752],
+        "bezel": "ipad-pro-m4-13",
+        "rotateBezel": 90,
+        "frameWidthFraction": 0.68,
+        "anchor": "center"
+      }
+    },
+    "style": {
+      "background": { "top": [93, 104, 138], "bottom": [62, 70, 96] },
+      "noise": true,
+      "headlineColor": [255, 242, 239],
+      "subheadlineColor": [255, 242, 239]
+    },
+    "fonts": {
+      "default": {
+        "regular": "store-assets/fonts/Pretendard-Regular.otf",
+        "semibold": "store-assets/fonts/Pretendard-SemiBold.otf"
+      },
+      "ja": { "variable": "store-assets/fonts/NotoSansJP.ttf" },
+      "zh-Hans": { "variable": "store-assets/fonts/NotoSansSC.ttf" },
+      "zh-Hant": { "variable": "store-assets/fonts/NotoSansTC.ttf" }
+    },
+    "scenes": [
+      {
+        "id": "home",
+        "copy": {
+          "ko": { "headline": "첫 화면 헤드라인", "subheadline": "한 줄 설명" },
+          "en": { "headline": "Home headline", "subheadline": "One line of detail" }
+        }
+      }
+    ]
+  }
+}

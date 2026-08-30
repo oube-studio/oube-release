@@ -1,0 +1,7 @@
+# 인증은 레인이 App Store Connect API 키를 --api_key_path 로 넘겨서 한다.
+# 빌드 파일은 pilot 단계에서 따로 올리므로 여기서는 스토어 문구만 다룬다.
+skip_binary_upload true
+# 스크린샷 업로드는 store-assets/final 과 경로를 연결한 뒤에 켠다.
+skip_screenshots true
+# 올리기 전에 로컬 미리보기 HTML 을 확인하는 단계를 건너뛴다.
+force true

@@ -1,0 +1,33 @@
+{
+  "name": "@oube/release",
+  "version": "0.1.0",
+  "description": "oube Expo 앱들이 공유하는 스토어 릴리스 도구 (fastlane 레인, 스크린샷 자동화, 등록정보 검사)",
+  "license": "MIT",
+  "repository": "github:oube-studio/oube-release",
+  "packageManager": "pnpm@10.28.1",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "oube-release": "bin/oube-release.js"
+  },
+  "files": [
+    "bin",
+    "tools",
+    "templates",
+    "schema"
+  ],
+  "scripts": {
+    "test": "node --test 'tests/*.test.js' && python3 -m unittest discover -s tests -p 'test_*.py'",
+    "lint": "shellcheck tools/screenshots/*.sh && ruff check tools tests && ruby -c tools/fastlane/Fastfile",
+    "format": "prettier --check . && ruff format --check tools tests",
+    "verify": "pnpm lint && pnpm format && pnpm test",
+    "hooks": "git config core.hooksPath .githooks",
+    "version": "node -e \"const f = 'README.md', fs = require('fs'); fs.writeFileSync(f, fs.readFileSync(f, 'utf8').replace(/#v\\S+/, '#v' + process.env.npm_package_version))\" && git add README.md",
+    "postversion": "git push --follow-tags"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}

@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+tools/fastlane/Fastfile
+templates/fastlane/Fastfile
+templates/fastlane/Appfile
+templates/fastlane/Deliverfile
+.githooks/

@@ -1,0 +1,176 @@
+# @oube/release 공용 레인. 앱의 fastlane/Fastfile 이 이 파일을 import 한다.
+# 앱마다 다른 값은 앱 폴더의 oube.config.json 에서 읽는다. 키 파일 두 개는 앱의 fastlane/ 에 둔다(git 에는 올리지 않음).
+skip_docs
+
+# fastlane 은 sh 를 fastlane/ 에서, 액션을 앱 폴더에서 실행하므로 모든 경로는 절대 경로여야 한다.
+# __dir__ 은 이 패키지 안을 가리켜서 쓸 수 없고, 앱의 fastlane 폴더 위치에서 앱 폴더를 구한다.
+ROOT = File.expand_path("..", FastlaneCore::FastlaneFolder.path)
+CONFIG = JSON.parse(File.read(File.join(ROOT, "oube.config.json")))
+ASC_KEY = File.join(ROOT, "fastlane", "asc-api-key.json.key")
+PLAY_KEY = File.join(ROOT, "fastlane", "play-service-account.json.key")
+BUNDLE_ID = CONFIG.fetch("ios").fetch("bundleId")
+PACKAGE = CONFIG.fetch("android").fetch("package")
+BUILD_MODE = CONFIG.fetch("build", "local")
+
+desc "프로덕션 빌드를 만들어 TestFlight 와 Play 내부 테스트 트랙에 업로드합니다"
+lane :beta do
+  ipa = File.join(ROOT, "build/beta.ipa")
+  aab = File.join(ROOT, "build/beta.aab")
+  FileUtils.mkdir_p(File.join(ROOT, "build"))
+  # 이전 빌드 파일이 남아 있으면 이번 빌드가 실패해도 옛 파일이 그대로 올라간다.
+  FileUtils.rm_f(ipa)
+  FileUtils.rm_f(aab)
+
+  build_artifact("ios", ipa)
+  pilot(ipa: ipa, app_identifier: BUNDLE_ID, api_key_path: ASC_KEY)
+
+  build_artifact("android", aab)
+  supply(
+    aab: aab,
+    track: "internal",
+    package_name: PACKAGE,
+    json_key: PLAY_KEY,
+    skip_upload_aab: false,
+    skip_upload_metadata: true,
+    skip_upload_images: true,
+    skip_upload_screenshots: true
+  )
+  codes = google_play_track_version_codes(track: "internal", package_name: PACKAGE, json_key: PLAY_KEY)
+  UI.success("내부 트랙 업로드 완료: versionCode #{codes.max}")
+end
+
+desc "스토어 문구를 업로드하고 심사 제출과 프로덕션 승격까지 진행합니다 (iap:true 면 제출 준비된 인앱 상품도 함께 제출)"
+lane :release do |options|
+  version = JSON.parse(File.read(File.join(ROOT, "app.json"))).dig("expo", "version")
+  build_number = latest_testflight_build_number(version: version, app_identifier: BUNDLE_ID, api_key_path: ASC_KEY).to_s
+  UI.message("iOS #{version} (#{build_number}) 제출 준비")
+
+  # precheck 는 API 키 인증으로는 인앱 상품을 검사하지 못해 끈다.
+  deliver(
+    app_identifier: BUNDLE_ID,
+    api_key_path: ASC_KEY,
+    app_version: version,
+    build_number: build_number,
+    submit_for_review: false,
+    automatic_release: true,
+    run_precheck_before_submit: false
+  )
+  submit_ios_review(version: version, build_number: build_number, include_iap: options[:iap])
+
+  version_code = google_play_track_version_codes(track: "internal", package_name: PACKAGE, json_key: PLAY_KEY).max
+  # Supplyfile 은 레인 안 액션에는 로드되지 않아 스킵을 명시한다. 빼면 루트의 옛 aab 를 주워 올린다.
+  supply(
+    track: "internal",
+    track_promote_to: "production",
+    version_code: version_code,
+    package_name: PACKAGE,
+    json_key: PLAY_KEY,
+    skip_upload_aab: true,
+    skip_upload_apk: true,
+    skip_upload_images: true,
+    skip_upload_screenshots: true
+  )
+  UI.success("Android versionCode #{version_code} 프로덕션 승격 완료")
+end
+
+# 프로덕션 빌드 파일을 output 경로에 만든다. local 은 이 Mac 에서 빌드하고, eas-cloud 는 EAS 가 빌드한 파일을 내려받는다.
+def build_artifact(platform, output)
+  case BUILD_MODE
+  when "local"
+    sh("cd #{ROOT} && #{clean_shell_env} eas build --platform #{platform} --profile production --local --non-interactive --output #{output}")
+  when "eas-cloud"
+    # --json 이면 빌드 로그는 stderr, 결과 JSON 만 stdout 으로 온다
+    json = sh("cd #{ROOT} && #{clean_shell_env} eas build --platform #{platform} --profile production --non-interactive --wait --json", log: false)
+    url = JSON.parse(json).first&.dig("artifacts", "buildUrl")
+    UI.user_error!("EAS 빌드 결과 파일의 URL 을 찾을 수 없습니다") unless url
+    sh("curl -fsSL -o #{output} #{url}")
+  else
+    UI.user_error!("oube.config.json 의 build 값이 잘못됐습니다: #{BUILD_MODE} (local | eas-cloud)")
+  end
+end
+
+# fastlane 이 심는 루비 환경이 eas 의 CocoaPods 와 fastlane 런타임 검사를 오염시켜서,
+# eas 는 깨끗한 환경에서 실행해야 한다. node 경로는 셸의 eas 위치에서 얻는다.
+def clean_shell_env
+  node_bin = File.dirname(`which eas`.chomp)
+  %(env -i HOME="$HOME" USER="$USER" TMPDIR="$TMPDIR" LANG="en_US.UTF-8" ANDROID_HOME="$ANDROID_HOME" EXPO_TOKEN="$EXPO_TOKEN" PATH="#{node_bin}:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin")
+end
+
+# 제출은 deliver 대신 항상 이 경로를 쓴다. 기존 심사 제출(review submission)이
+# 있으면 재사용하고, 없으면 만들어서 버전과 인앱 상품을 함께 넣는다.
+def submit_ios_review(version:, build_number:, include_iap:)
+  require "spaceship"
+
+  Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from_json_file(ASC_KEY)
+  app = Spaceship::ConnectAPI::App.find(BUNDLE_ID)
+
+  edit_version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+  # 심사 대기 중인 버전도 편집 가능 조회에 잡히므로, 제출 가능한 상태일 때만 진행한다.
+  submittable = ["PREPARE_FOR_SUBMISSION", "REJECTED", "DEVELOPER_REJECTED", "METADATA_REJECTED", "INVALID_BINARY"]
+  state = edit_version && (edit_version.app_version_state || edit_version.app_store_state)
+  if edit_version.nil? || !submittable.include?(state)
+    UI.important("iOS #{version}은 이미 제출된 상태라 건너뜁니다 (#{state || '버전 없음'})")
+    return
+  end
+  UI.user_error!("편집 가능한 버전이 #{version}이 아니라 #{edit_version.version_string}입니다") unless edit_version.version_string == version
+
+  # deliver 는 submit_for_review 없이는 빌드를 버전에 붙이지 않아서 직접 지정한다.
+  build = asc_get("builds?filter[app]=#{app.id}&filter[version]=#{build_number}&limit=1").fetch("data", []).first
+  UI.user_error!("빌드 #{build_number}를 찾을 수 없습니다") unless build
+  asc_patch("appStoreVersions/#{edit_version.id}/relationships/build", { data: { type: "builds", id: build["id"] } })
+  UI.message("빌드 #{build_number} 지정 완료")
+
+  submission = app.get_ready_review_submission(platform: Spaceship::ConnectAPI::Platform::IOS, includes: "items") ||
+               app.create_review_submission(platform: Spaceship::ConnectAPI::Platform::IOS)
+
+  if include_iap
+    iaps = asc_get("apps/#{app.id}/inAppPurchasesV2?filter[state]=READY_TO_SUBMIT&limit=200").fetch("data", [])
+    UI.user_error!("제출 준비된 인앱 상품이 없습니다") if iaps.empty?
+    iaps.each do |iap|
+      UI.message("함께 제출: #{iap.dig('attributes', 'name')} (#{iap.dig('attributes', 'productId')})")
+      # 이 호출은 새 인앱 상품을 처음 함께 제출하는 릴리스에서 실제 검증된다. 실패하면 여기서 멈춘다.
+      asc_post("reviewSubmissionItems", {
+        data: {
+          type: "reviewSubmissionItems",
+          relationships: {
+            reviewSubmission: { data: { type: "reviewSubmissions", id: submission.id } },
+            inAppPurchaseV2: { data: { type: "inAppPurchases", id: iap["id"] } },
+          },
+        },
+      })
+    end
+  end
+
+  submission.add_app_store_version_to_review_items(app_store_version_id: edit_version.id)
+  submission.submit_for_review
+  UI.success("iOS 심사 제출 완료 (#{version})")
+end
+
+def asc_request(method, path, body = nil)
+  require "net/http"
+  uri = URI("https://api.appstoreconnect.apple.com/v1/#{path}")
+  request =
+    case method
+    when :post then Net::HTTP::Post.new(uri)
+    when :patch then Net::HTTP::Patch.new(uri)
+    else Net::HTTP::Get.new(uri)
+    end
+  request["Authorization"] = "Bearer #{Spaceship::ConnectAPI.token.text}"
+  request["Content-Type"] = "application/json"
+  request.body = body.to_json if body
+  response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(request) }
+  UI.user_error!("ASC API #{method} #{path} 실패 (#{response.code}): #{response.body}") unless response.code.start_with?("2")
+  response.body.to_s.empty? ? {} : JSON.parse(response.body)
+end
+
+def asc_patch(path, body)
+  asc_request(:patch, path, body)
+end
+
+def asc_get(path)
+  asc_request(:get, path)
+end
+
+def asc_post(path, body)
+  asc_request(:post, path, body)
+end

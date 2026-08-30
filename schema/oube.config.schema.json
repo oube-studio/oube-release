@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "oube.config.json",
+  "description": "oube Expo 앱의 스토어 출시 설정. 앱 폴더(app.json 옆)에 둔다.",
+  "type": "object",
+  "required": ["scheme", "ios", "android", "locales"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "scheme": {
+      "type": "string",
+      "description": "app.json 의 scheme. 스크린샷 장면을 여는 딥링크에 쓴다"
+    },
+    "ios": {
+      "type": "object",
+      "required": ["bundleId"],
+      "additionalProperties": false,
+      "properties": { "bundleId": { "type": "string" } }
+    },
+    "android": {
+      "type": "object",
+      "required": ["package"],
+      "additionalProperties": false,
+      "properties": { "package": { "type": "string" } }
+    },
+    "build": {
+      "type": "string",
+      "enum": ["local", "eas-cloud"],
+      "default": "local",
+      "description": "beta 레인이 빌드하는 방식. local 은 이 Mac 에서 eas build --local, eas-cloud 는 EAS 서버에서 빌드한 파일을 내려받는다"
+    },
+    "iap": {
+      "type": "boolean",
+      "default": false,
+      "description": "인앱 상품이 있는 앱이면 true. init 이 fastlane/iap-products.json 원고를 만든다"
+    },
+    "locales": {
+      "type": "object",
+      "description": "앱의 언어 코드마다 스토어 로케일을 적는다. 키는 i18n 언어 코드(ko, en, ja, zh-Hans 등)",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["appStore", "play", "storefront", "hl"],
+        "additionalProperties": false,
+        "properties": {
+          "appStore": {
+            "type": "string",
+            "description": "fastlane deliver 메타데이터 폴더명 (ko, en-US, ja, zh-Hans 등)"
+          },
+          "play": {
+            "type": "string",
+            "description": "fastlane supply 메타데이터 폴더명 (ko-KR, en-US, ja-JP, zh-CN 등)"
+          },
+          "storefront": {
+            "type": "string",
+            "description": "App Store 국가 코드. 스토어에 올라간 문구를 비교할 때(iTunes Lookup) 쓴다"
+          },
+          "hl": {
+            "type": "string",
+            "description": "Google Play 페이지의 언어 파라미터. 스토어에 올라간 문구를 비교할 때 쓴다"
+          }
+        }
+      }
+    },
+    "screenshots": {
+      "type": "object",
+      "required": ["devices", "scenes"],
+      "additionalProperties": false,
+      "properties": {
+        "captureDelaySeconds": { "type": "number", "default": 3 },
+        "statusBarTime": { "type": "string", "default": "9:41" },
+        "devices": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "required": ["simulatorName", "canvas", "bezel", "frameWidthFraction", "anchor"],
+            "additionalProperties": false,
+            "properties": {
+              "simulatorName": {
+                "type": "string",
+                "description": "xcrun simctl 에 보이는 시뮬레이터 이름"
+              },
+              "canvas": {
+                "type": "array",
+                "items": { "type": "integer" },
+                "minItems": 2,
+                "maxItems": 2,
+                "description": "스토어에 올리는 이미지 크기 [가로, 세로] px. 캡처 크기가 맞는지 확인할 때도 쓴다"
+              },
+              "bezel": {
+                "type": "string",
+                "description": "패키지 베젤 이름(iphone-17-pro-max, ipad-pro-m4-13) 또는 앱 폴더 기준 PNG 경로(.png 로 끝남)"
+              },
+              "rotateBezel": { "type": "integer", "default": 0 },
+              "frameWidthFraction": {
+                "type": "number",
+                "description": "캔버스 가로에 대한 기기 프레임 가로의 비율"
+              },
+              "anchor": {
+                "type": "string",
+                "enum": ["bottom", "center"],
+                "description": "bottom 은 좌우와 아래 여백을 같게, center 는 세로 중앙에 놓는다"
+              }
+            }
+          }
+        },
+        "style": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "background": {
+              "description": "단색 [r,g,b] 또는 위아래 그라디언트 {top, bottom}",
+              "oneOf": [
+                { "$ref": "#/definitions/rgb" },
+                {
+                  "type": "object",
+                  "required": ["top", "bottom"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "top": { "$ref": "#/definitions/rgb" },
+                    "bottom": { "$ref": "#/definitions/rgb" }
+                  }
+                }
+              ]
+            },
+            "noise": {
+              "type": "boolean",
+              "default": false,
+              "description": "배경에 미세한 노이즈를 섞어 그라디언트의 색 띠를 줄인다"
+            },
+            "headlineColor": { "$ref": "#/definitions/rgb" },
+            "subheadlineColor": { "$ref": "#/definitions/rgb" }
+          }
+        },
+        "fonts": {
+          "type": "object",
+          "description": "문구 폰트. default 는 따로 적지 않은 모든 언어에 쓰인다. 경로는 앱 폴더 기준",
+          "required": ["default"],
+          "additionalProperties": { "$ref": "#/definitions/font" },
+          "properties": { "default": { "$ref": "#/definitions/font" } }
+        },
+        "scenes": {
+          "type": "array",
+          "minItems": 1,
+          "description": "적은 순서대로 스토어에 올라간다",
+          "items": {
+            "type": "object",
+            "required": ["id", "copy"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$",
+                "description": "딥링크 /__screenshots/<id> 의 장면 이름"
+              },
+              "copy": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": ["headline", "subheadline"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "headline": { "type": "string" },
+                    "subheadline": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "rgb": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "font": {
+      "description": "고정 굵기 폰트 두 개(regular, semibold) 또는 굵기(wght) 축이 있는 가변 폰트 하나",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["regular", "semibold"],
+          "additionalProperties": false,
+          "properties": { "regular": { "type": "string" }, "semibold": { "type": "string" } }
+        },
+        {
+          "type": "object",
+          "required": ["variable"],
+          "additionalProperties": false,
+          "properties": { "variable": { "type": "string" } }
+        }
+      ]
+    }
+  }
+}

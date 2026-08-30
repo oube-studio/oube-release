@@ -1,0 +1,14 @@
+{
+  "note": "스토어 콘솔에 입력할 원고. 가격은 USD 기준(애플이 자동 환산). App Store 한도는 표시 이름 30자, 설명 45자. oube-release metadata lint 가 검사한다.",
+  "products": [
+    {
+      "productId": "<android package>.remove_ads",
+      "type": "non_consumable",
+      "priceUsd": 1.99,
+      "localizations": {
+        "ko": { "name": "광고 제거", "description": "모든 광고를 없앱니다." },
+        "en": { "name": "Remove Ads", "description": "Removes all ads." }
+      }
+    }
+  ]
+}
