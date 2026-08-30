@@ -44,8 +44,10 @@ const PLAY_FILES = [
   'changelogs/default.txt',
 ];
 const GITIGNORE_LINES = [
-  'fastlane/*.json.key',
-  'fastlane/*.p8',
+  // 키 파일은 폴더에 상관없이 확장자(*.json.key, *.p8)로 무시한다.
+  // fastlane/ 로 한정하면 이미 *.json.key 를 무시하는 앱에 같은 항목이 중복으로 들어간다
+  '*.json.key',
+  '*.p8',
   'fastlane/report.xml',
   'fastlane/Preview.html',
   'fastlane/metadata/android/*/images/',

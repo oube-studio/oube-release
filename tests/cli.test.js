@@ -61,7 +61,9 @@ test('init writes a config prefilled from app.json, then scaffolds fastlane and 
     )
   );
   assert.match(second.stdout, /\.gitignore/);
-  assert.match(readFileSync(path.join(app, '.gitignore'), 'utf8'), /store-assets\/fonts\//);
+  const gitignore = readFileSync(path.join(app, '.gitignore'), 'utf8');
+  assert.match(gitignore, /^\*\.json\.key$/m);
+  assert.match(gitignore, /store-assets\/fonts\//);
 
   // 두 번째 init 은 있는 파일을 덮어쓰지 않는다
   writeFileSync(path.join(app, 'fastlane', 'metadata', 'ko', 'name.txt'), '허들');

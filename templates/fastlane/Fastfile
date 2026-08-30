@@ -1,3 +1,3 @@
-# 공용 레인은 @oube/release 패키지에 있다. 패키지가 설치되는 위치가 앱마다 다르므로 Node 에 물어서 찾는다.
+# 공용 레인은 @oube/release 패키지에 있다. 설치 경로가 앱마다 달라 require.resolve 로 찾는다.
 package_json = `node -p "require.resolve('@oube/release/package.json')"`.strip
 import File.join(File.dirname(package_json), "tools", "fastlane", "Fastfile")
