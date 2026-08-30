@@ -24,7 +24,7 @@
     "format": "prettier --check . && ruff format --check tools tests",
     "verify": "pnpm lint && pnpm format && pnpm test",
     "hooks": "git config core.hooksPath .githooks",
-    "version": "node -e \"const f = 'README.md', fs = require('fs'); fs.writeFileSync(f, fs.readFileSync(f, 'utf8').replace(/#v\\S+/, '#v' + process.env.npm_package_version))\" && git add README.md",
+    "version": "node -e \"const fs = require('fs'), v = process.env.npm_package_version; for (const [f, re, to] of [['README.md', /#v\\S+/, '#v' + v], ['CHANGELOG.md', /^## Unreleased$/m, '## ' + v]]) fs.writeFileSync(f, fs.readFileSync(f, 'utf8').replace(re, to))\" && git add README.md CHANGELOG.md",
     "postversion": "git push --follow-tags"
   },
   "devDependencies": {

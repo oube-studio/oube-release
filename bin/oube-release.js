@@ -250,10 +250,15 @@ function init(cwd) {
       writeIfMissing(path.join(meta, 'android', locale.play, name), '');
   }
   if (existsSync(path.join(found, 'app'))) {
-    writeIfMissing(
+    const routeWritten = writeIfMissing(
       path.join(found, 'app', '__screenshots', '[scene].tsx'),
       readFileSync(path.join(TEMPLATES, 'app', '__screenshots', '[scene].tsx'), 'utf8')
     );
+    if (routeWritten) {
+      console.log(
+        '  이 라우트는 @oube/expo v0.3.0 이상이 필요합니다: pnpm add github:oube-studio/oube-expo#v0.3.0'
+      );
+    }
   }
   appendGitignore(found);
   console.log(

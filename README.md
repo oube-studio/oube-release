@@ -1,7 +1,7 @@
 # @oube/release
 
 oube 의 Expo 앱들이 공통으로 사용하는 스토어 출시 도구입니다. 앱마다 복사해서 쓰던 fastlane 레인, 스크린샷 자동화,
-스토어 문구 검사를 한곳에서 관리합니다. 앱에 포함되는 런타임 코드는 [@oube/expo](https://github.com/shine-jung/oube-expo) 에 있고,
+스토어 문구 검사를 한곳에서 관리합니다. 앱에 포함되는 런타임 코드는 [@oube/expo](https://github.com/oube-studio/oube-expo) 에 있고,
 이 패키지는 개발 환경과 CI 에서만 실행됩니다.
 
 ## 설치
@@ -119,7 +119,8 @@ fastlane 명령어는 앱 폴더에서 실행합니다. 앱의 `fastlane/Fastfil
 
 ## 앱에 있어야 하는 파일
 
-- `app/__screenshots/[scene].tsx`: init 이 생성합니다. 스크린샷 빌드(`EXPO_PUBLIC_SCREENSHOT_MODE=true`)에서만 동작하며,
+- `app/__screenshots/[scene].tsx`: init 이 생성합니다. `@oube/expo/screenshots` 의 `createScreenshotScene` 을 쓰므로
+  `@oube/expo` v0.3.0 이상이 설치되어 있어야 합니다. 스크린샷 빌드(`EXPO_PUBLIC_SCREENSHOT_MODE=true`)에서만 동작하며,
   `applyScreenshotScene(scene, lang)` 을 호출한 뒤 반환된 경로로 이동합니다.
 - `lib/screenshot-scenes.ts`: 앱마다 직접 구현합니다. 언어를 설정하고 장면에 필요한 데이터(예시 사용자, 고정된 기록 등)를 앱 상태에 넣은 뒤
   이동할 화면 경로를 반환합니다. 화면 구성과 데이터 구조가 앱마다 달라 공통화하지 않습니다.
@@ -156,9 +157,9 @@ GitHub Actions 에서도 같은 `pnpm verify` 를 실행합니다.
 ## 릴리스
 
 1. KnightsOfArthur 에서 동작을 확인합니다. 새 버전은 항상 이 앱에서 먼저 검증한 뒤 다른 앱에 적용합니다.
-2. `CHANGELOG.md` 에 변경 내용을 적고 커밋합니다.
-3. `pnpm version minor` (또는 `patch`, `major`) 를 실행합니다. 버전을 올리고, 위 설치 예시의 태그를 갱신하고,
-   `chore: release vX.Y.Z` 커밋과 태그를 만들어 push 까지 진행합니다.
+2. `CHANGELOG.md` 의 `## Unreleased` 아래에 변경 내용을 적고 커밋합니다.
+3. `pnpm version minor` (또는 `patch`, `major`) 를 실행합니다. 버전을 올리고, 위 설치 예시의 태그와 `CHANGELOG.md` 의
+   `## Unreleased` 제목을 새 버전으로 바꾸고, `chore: release vX.Y.Z` 커밋과 태그를 만들어 push 까지 진행합니다.
 4. 앱에서 태그를 올리고 테스트합니다.
 
 0.x 버전에서는 minor 업데이트에서도 호환성이 깨질 수 있습니다. 위험한 변경은 `v0.2.0-rc.1` 같은 rc 버전으로 먼저 검증합니다.
