@@ -127,6 +127,7 @@ fastlane 명령어는 앱 폴더에서 실행합니다. 앱의 `fastlane/Fastfil
   스크린샷 모드에서 로그인 없이도 해당 화면에 진입할 수 있어야 합니다.
 - `fastlane/metadata/`: 스토어 문구의 원본입니다. 폴더 구조는 init 이 생성한 `fastlane/metadata/README.md` 를 참고합니다.
 - `store-assets/`: 캡처 원본(`captures/`), 합성 결과(`final/`), 미리보기(`contact-sheets/`), 폰트(`fonts/`).
+  모두 명령어로 다시 만들 수 있는 파일이라 init 이 `.gitignore` 에 추가합니다.
 
 ## 결과 파일
 

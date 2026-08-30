@@ -51,6 +51,11 @@ const GITIGNORE_LINES = [
   'fastlane/metadata/android/*/images/',
   'build/',
   '.screenshots-derived-data/',
+  // 캡처, 합성 결과, 폰트는 명령어로 다시 만들 수 있는 파일이라 저장소에 두지 않는다
+  'store-assets/captures/',
+  'store-assets/final/',
+  'store-assets/contact-sheets/',
+  'store-assets/fonts/',
 ];
 
 function fail(message) {
