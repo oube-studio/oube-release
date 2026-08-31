@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 0.3.0
 
 - `screenshots.appearance` 설정을 추가했습니다. `dark` 또는 `light` 를 지정하면 캡처 전에 시뮬레이터를 그 모드로 바꿉니다.
 
