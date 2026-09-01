@@ -101,6 +101,11 @@ xcrun simctl status_bar "$UDID" override \
   --cellularMode active \
   --cellularBars 4
 
+# SpringBoard 재시작으로 앱이 함께 종료될 때가 있다. 그 상태로 첫 딥링크를 열면 콜드 스타트의
+# 스플래시가 캡처에 찍힐 수 있어, 캡처 전에 앱을 새로 실행해 두고 안정될 때까지 기다린다
+xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE_ID" >/dev/null
+sleep 5
+
 count=0
 while IFS=$'\t' read -r order scene; do
   printf -v number '%02d' "$order"
