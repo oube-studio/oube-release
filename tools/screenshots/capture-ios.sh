@@ -82,6 +82,12 @@ reset_status_bar() {
 }
 trap reset_status_bar EXIT
 
+# 시뮬레이터에서 다른 앱을 쓴 적이 있으면 상태 표시줄에 그 앱으로 돌아가는 표시가 남아 캡처에 찍힌다.
+# 이 표시는 앱을 다시 실행해도 사라지지 않고 SpringBoard 를 재시작해야 사라진다.
+# 상태 표시줄 재정의도 함께 초기화되므로 재정의보다 먼저 실행한다
+xcrun simctl spawn "$UDID" launchctl kickstart -k user/foreground/com.apple.SpringBoard
+sleep 6
+
 # appearance 가 지정되어 있으면 캡처 전에 시뮬레이터를 그 라이트/다크 모드로 바꾼다
 if [[ -n "$APPEARANCE" ]]; then
   xcrun simctl ui "$UDID" appearance "$APPEARANCE"

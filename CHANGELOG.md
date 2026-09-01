@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- 캡처 전에 SpringBoard 를 재시작합니다. 시뮬레이터에서 다른 앱을 쓴 적이 있으면 상태 표시줄에 그 앱으로 돌아가는 표시가 남아 스크린샷에 찍히던 문제를 고쳤습니다.
+
 ## 0.3.0
 
 - `screenshots.appearance` 설정을 추가했습니다. `dark` 또는 `light` 를 지정하면 캡처 전에 시뮬레이터를 그 모드로 바꿉니다.
