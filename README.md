@@ -7,7 +7,7 @@ oube 의 Expo 앱들이 공통으로 사용하는 스토어 출시 도구입니�
 ## 설치
 
 ```bash
-pnpm add -D github:oube-studio/oube-release#v0.3.1
+pnpm add -D github:oube-studio/oube-release#v0.3.2
 ```
 
 버전은 항상 태그로 지정합니다. `#main` 을 사용하면 설치 시점에 따라 다른 코드가 설치되어 같은 결과를 보장할 수 없습니다.
