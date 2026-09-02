@@ -24,7 +24,7 @@ const HELP = `oube-release <command>
   doctor                            필요한 도구가 설치되어 있는지 확인합니다
 
 --device 를 생략하면 설정의 첫 번째 기기, --locale 을 생략하면 모든 언어를 대상으로 합니다.
-빌드 업로드와 심사 제출은 앱 폴더에서 fastlane beta, fastlane release 로 실행합니다.`;
+빌드 업로드, 심사 제출, 스크린샷 업로드는 앱 폴더에서 fastlane beta, fastlane release, fastlane upload_screenshots 로 실행합니다.`;
 
 const APP_STORE_FILES = [
   'name.txt',
@@ -239,7 +239,10 @@ function init(cwd) {
   if (config.iap) {
     writeIfMissing(
       path.join(found, 'fastlane', 'iap-products.json'),
-      readFileSync(path.join(TEMPLATES, 'fastlane', 'iap-products.json'), 'utf8')
+      readFileSync(path.join(TEMPLATES, 'fastlane', 'iap-products.json'), 'utf8').replaceAll(
+        '<android package>',
+        config.android.package
+      )
     );
   }
   const meta = path.join(found, 'fastlane', 'metadata');
@@ -256,7 +259,7 @@ function init(cwd) {
     );
     if (routeWritten) {
       console.log(
-        '  이 라우트는 @oube/expo v0.3.0 이상이 필요합니다: pnpm add github:oube-studio/oube-expo#v0.3.0'
+        '  이 라우트는 @oube/expo v0.4.1 이상이 필요합니다: pnpm add github:oube-studio/oube-expo#v0.4.1'
       );
     }
   }
@@ -301,18 +304,11 @@ function main() {
   }
   if (command === 'doctor') return doctor();
   if (command === 'init') return init(process.cwd());
-  if (command === 'fonts') {
-    const root = findAppRoot(process.cwd());
-    if (!root)
-      fail(
-        'oube.config.json 을 찾을 수 없습니다. 앱 폴더에서 oube-release init 을 먼저 실행하세요.'
-      );
-    return fonts(root);
-  }
 
   const root = findAppRoot(process.cwd());
   if (!root)
     fail('oube.config.json 을 찾을 수 없습니다. 앱 폴더에서 oube-release init 을 먼저 실행하세요.');
+  if (command === 'fonts') return fonts(root);
   const config = loadConfig(root);
   if (command === 'screenshots') return screenshots(sub, flags, root, config);
   if (command === 'metadata') return metadata(sub, root);

@@ -3,6 +3,10 @@
 ## Unreleased
 
 - `fastlane upload_screenshots` 레인을 추가했습니다. `store-assets/final/` 의 스크린샷을 App Store 와 Google Play 에 언어별로 업로드하고, `android.featureGraphic` 을 지정하면 Play 피처 그래픽도 함께 올립니다. iOS 는 기존 장을 지우고 새로 올리며, Android 는 바뀐 장만 올리고 로컬에 없는 장은 지워 스토어를 로컬 파일과 일치시킵니다.
+- 스크린샷 빌드가 ios 폴더는 있는데 .xcworkspace 가 없는 상태(이전 pod install 실패)를 만나면 프로젝트를 다시 생성합니다. 전에는 폴더를 재사용하며 pod install 을 건너뛰어 같은 실패가 반복됐습니다. 설치 뒤 앱을 실행하던 단계는 capture 가 대신하므로 뺐습니다.
+- `metadata verify` 가 조회 결과가 없는 지역(처리 중이거나 미출시)을 실패로 세지 않고 건너뛴 것으로 알립니다. 출력도 한국어로 바꿨습니다.
+- 합성 문구가 두 줄을 넘거나 레이아웃이 캔버스를 넘을 때 스택트레이스 대신 메시지만 보여줍니다.
+- init 이 iap-products.json 원고의 패키지 자리표시를 채우고, 스크린샷 라우트 안내가 `@oube/expo` v0.4.1 기준으로 바뀌었습니다.
 
 ## 0.3.2
 

@@ -72,7 +72,10 @@ def main() -> None:
         if not capture.exists():
             sys.exit(f"캡처가 없습니다: {capture}")
         output = final / f"{number}-{scene['id']}.png"
-        outputs.append(compose(capture, output, args.device, args.locale, scene, config, root))
+        try:
+            outputs.append(compose(capture, output, args.device, args.locale, scene, config, root))
+        except ValueError as error:
+            sys.exit(str(error))
         print(output)
 
     contact_sheet = root / "store-assets" / "contact-sheets" / f"{args.device}-{args.locale}.png"

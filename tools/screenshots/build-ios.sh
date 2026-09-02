@@ -21,7 +21,6 @@ if ! jq -e --arg device "$DEVICE" '.screenshots.devices[$device]' "$CONFIG" >/de
 fi
 
 SIMULATOR_NAME="$(jq -r --arg device "$DEVICE" '.screenshots.devices[$device].simulatorName' "$CONFIG")"
-BUNDLE_ID="$(jq -r '.ios.bundleId' "$CONFIG")"
 DERIVED_DATA="$PROJECT_DIR/.screenshots-derived-data"
 IOS_DIR="$PROJECT_DIR/ios"
 IOS_FINGERPRINT_FILE="$IOS_DIR/.screenshot-prebuild.sha256"
@@ -64,13 +63,11 @@ write_ios_fingerprint() {
 }
 
 generate_ios_project() {
-  echo "iOS 프로젝트를 생성합니다"
   (cd "$PROJECT_DIR" && npx expo prebuild --platform ios)
   write_ios_fingerprint "$1"
 }
 
 regenerate_ios_project() {
-  echo "네이티브에 영향을 주는 파일이 바뀌어 iOS 프로젝트를 다시 생성합니다"
   (cd "$PROJECT_DIR" && EXPO_NO_GIT_STATUS=1 npx expo prebuild --platform ios --clean)
   write_ios_fingerprint "$1"
 }
@@ -93,9 +90,13 @@ fi
 
 CURRENT_NATIVE_FINGERPRINT="$(native_input_fingerprint)"
 
-if [[ -z "$(find_workspace)" ]]; then
+# expo prebuild 는 pod install 이 실패해도 정상 종료하므로, 폴더는 있는데 .xcworkspace 가 없는 상태가 남을 수 있다.
+# 그 상태에서 --clean 없이 prebuild 하면 폴더를 재사용하며 pod install 을 건너뛰어 같은 실패가 반복되므로 다시 생성한다
+if [[ ! -d "$IOS_DIR" ]]; then
+  echo "iOS 프로젝트를 생성합니다"
   generate_ios_project "$CURRENT_NATIVE_FINGERPRINT"
 elif [[ "${SCREENSHOT_REGENERATE_IOS:-0}" == "1" ]]; then
+  echo "요청에 따라 iOS 프로젝트를 다시 생성합니다"
   regenerate_ios_project "$CURRENT_NATIVE_FINGERPRINT"
 elif [[ ! -f "$IOS_FINGERPRINT_FILE" ]]; then
   echo "ios/ 는 스크린샷 자동화가 만든 프로젝트가 아니어서 자동으로 지우지 않습니다." >&2
@@ -103,6 +104,10 @@ elif [[ ! -f "$IOS_FINGERPRINT_FILE" ]]; then
   echo "  SCREENSHOT_REGENERATE_IOS=1 oube-release screenshots build --device $DEVICE" >&2
   exit 1
 elif [[ "$(<"$IOS_FINGERPRINT_FILE")" != "$CURRENT_NATIVE_FINGERPRINT" ]]; then
+  echo "네이티브에 영향을 주는 파일이 바뀌어 iOS 프로젝트를 다시 생성합니다"
+  regenerate_ios_project "$CURRENT_NATIVE_FINGERPRINT"
+elif [[ -z "$(find_workspace)" ]]; then
+  echo "ios/ 에 .xcworkspace 가 없어(이전 pod install 실패) iOS 프로젝트를 다시 생성합니다"
   regenerate_ios_project "$CURRENT_NATIVE_FINGERPRINT"
 else
   echo "기존 iOS 프로젝트를 재사용합니다"
@@ -110,7 +115,7 @@ fi
 
 IOS_WORKSPACE="$(find_workspace)"
 if [[ -z "$IOS_WORKSPACE" ]]; then
-  echo "prebuild 뒤에도 $IOS_DIR 에 .xcworkspace 가 없습니다." >&2
+  echo "prebuild 뒤에도 $IOS_DIR 에 .xcworkspace 가 없습니다. 위의 pod install 오류를 확인하세요." >&2
   exit 1
 fi
 SCHEME_NAME="$(basename "$IOS_WORKSPACE" .xcworkspace)"
@@ -142,6 +147,5 @@ if [[ ! -d "$APP_PATH" ]]; then
 fi
 
 xcrun simctl install "$UDID" "$APP_PATH"
-xcrun simctl launch "$UDID" "$BUNDLE_ID" >/dev/null
 
 echo "$SIMULATOR_NAME 에 스크린샷 Release 앱을 설치했습니다"

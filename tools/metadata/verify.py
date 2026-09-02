@@ -34,12 +34,12 @@ def fetch(url: str) -> str:
 
 def show(label: str, ok: bool, expected: str = "", actual: str = "") -> int:
     if ok:
-        print(f"    OK   {label}")
+        print(f"    같음  {label}")
         return 0
-    print(f"    DIFF {label}")
+    print(f"    다름  {label}")
     if expected or actual:
-        print(f"         expected: {expected[:110]}")
-        print(f"         actual:   {actual[:110]}")
+        print(f"          로컬:   {expected[:110]}")
+        print(f"          스토어: {actual[:110]}")
     return 1
 
 
@@ -49,8 +49,10 @@ def page_text(raw: str) -> str:
     return norm(html.unescape(raw))
 
 
-def check_app_store(meta: Path, config: dict, version: str) -> int:
+def check_app_store(meta: Path, config: dict, version: str) -> tuple[int, int]:
+    """(다른 항목 수, 조회 결과가 없어 건너뛴 지역 수)를 돌려준다."""
     diffs = 0
+    skipped = 0
     bundle_id = config["ios"]["bundleId"]
     print("\n=== App Store (iTunes Lookup API) ===")
     for code, locale in config["locales"].items():
@@ -61,37 +63,38 @@ def check_app_store(meta: Path, config: dict, version: str) -> int:
                 fetch(f"https://itunes.apple.com/lookup?bundleId={bundle_id}&country={locale['storefront']}")
             )
         except Exception as error:  # noqa: BLE001 네트워크 실패도 결과 한 줄로 남긴다
-            print(f"    ERROR fetch failed: {error}")
+            print(f"    오류  조회 실패: {error}")
             diffs += 1
             continue
+        # 지역이 처리 중이거나 그 지역에 출시하지 않았으면 결과가 없다. 문구가 다른 것이 아니므로 실패로 세지 않는다
         if not data.get("resultCount"):
-            print("    N/A  no result on this storefront")
-            diffs += 1
+            print("    없음  이 스토어프런트에 게시된 앱이 없습니다 (지역이 처리 중이거나 미출시면 정상)")
+            skipped += 1
             continue
         result = data["results"][0]
         expected_name = read_text(folder / "name.txt")
         expected_description = read_text(folder / "description.txt")
         expected_notes = read_text(folder / "release_notes.txt")
-        diffs += show("version", result.get("version") == version, version, str(result.get("version")))
+        diffs += show("버전", result.get("version") == version, version, str(result.get("version")))
         diffs += show(
-            "name",
+            "이름",
             norm(result.get("trackName", "")) == norm(expected_name),
             expected_name,
             result.get("trackName", ""),
         )
         diffs += show(
-            "description",
+            "설명",
             norm(result.get("description", "")) == norm(expected_description),
             norm(expected_description),
             norm(result.get("description", "")),
         )
         diffs += show(
-            "release notes",
+            "릴리스 노트",
             norm(result.get("releaseNotes", "")) == norm(expected_notes),
             norm(expected_notes),
             norm(result.get("releaseNotes", "")),
         )
-    return diffs
+    return diffs, skipped
 
 
 def check_play(meta: Path, config: dict) -> int:
@@ -106,20 +109,20 @@ def check_play(meta: Path, config: dict) -> int:
                 fetch(f"https://play.google.com/store/apps/details?id={package}&hl={locale['hl']}&gl=KR")
             )
         except Exception as error:  # noqa: BLE001
-            print(f"    ERROR fetch failed: {error}")
+            print(f"    오류  조회 실패: {error}")
             diffs += 1
             continue
         title = read_text(folder / "title.txt")
         short = read_text(folder / "short_description.txt")
-        diffs += show("name", norm(title) in body, title)
-        diffs += show("short description", norm(short) in body, norm(short))
+        diffs += show("이름", norm(title) in body, title)
+        diffs += show("짧은 설명", norm(short) in body, norm(short))
         paragraphs = [
             p for p in re.split(r"\n\s*\n", read_text(folder / "full_description.txt")) if p.strip()
         ]
         for index, paragraph in enumerate(paragraphs, 1):
-            diffs += show(f"description ¶{index}", norm(paragraph) in body, norm(paragraph))
+            diffs += show(f"설명 {index}번째 단락", norm(paragraph) in body, norm(paragraph))
         for line in [l for l in read_text(folder / "changelogs" / "default.txt").splitlines() if l.strip()]:
-            diffs += show(f"whats new: {line[:40]}", norm(line) in body, norm(line))
+            diffs += show(f"새로운 기능: {line[:40]}", norm(line) in body, norm(line))
     return diffs
 
 
@@ -127,8 +130,10 @@ def main() -> None:
     root = app_root()
     config = load_config()
     meta = root / "fastlane" / "metadata"
-    diffs = check_app_store(meta, config, app_version(root)) + check_play(meta, config)
-    print(f"\n{'all checks passed' if diffs == 0 else f'{diffs} check(s) failed'}")
+    app_store_diffs, skipped = check_app_store(meta, config, app_version(root))
+    diffs = app_store_diffs + check_play(meta, config)
+    note = f" (조회 결과가 없어 건너뛴 지역 {skipped}곳)" if skipped else ""
+    print(f"\n{'모두 일치합니다' if diffs == 0 else f'{diffs}개 항목이 다릅니다'}{note}")
     sys.exit(0 if diffs == 0 else 1)
 
 

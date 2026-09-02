@@ -125,8 +125,9 @@ fastlane 명령어는 앱 폴더에서 실행합니다. 앱의 `fastlane/Fastfil
 ## 앱에 있어야 하는 파일
 
 - `app/__screenshots/[scene].tsx`: init 이 생성합니다. `@oube/expo/screenshots` 의 `createScreenshotScene` 을 쓰므로
-  `@oube/expo` v0.3.0 이상이 설치되어 있어야 합니다. 스크린샷 빌드(`EXPO_PUBLIC_SCREENSHOT_MODE=true`)에서만 동작하며,
-  `applyScreenshotScene(scene, lang)` 을 호출한 뒤 반환된 경로로 이동합니다.
+  `@oube/expo` v0.4.1 이상이 설치되어 있어야 합니다. 스크린샷 빌드(`EXPO_PUBLIC_SCREENSHOT_MODE=true`)에서만 동작하며,
+  `applyScreenshotScene(scene, lang)` 을 호출한 뒤 반환된 경로로 이동합니다. 모달로 뜨는 장면이 있으면 `background` 에
+  앱 배경색을 넘겨 자리표시 화면이 모달 뒤로 비치지 않게 합니다.
 - `lib/screenshot-scenes.ts`: 앱마다 직접 구현합니다. 언어를 설정하고 장면에 필요한 데이터(예시 사용자, 고정된 기록 등)를 앱 상태에 넣은 뒤
   이동할 화면 경로를 반환합니다. 화면 구성과 데이터 구조가 앱마다 달라 공통화하지 않습니다.
 - 캡처 스크립트는 `<scheme>:///__screenshots/<scene>?lang=<locale>` 딥링크로 장면을 엽니다. 로그인이 필요한 앱은
@@ -157,7 +158,15 @@ pnpm verify   # shellcheck, ruff, ruby -c, prettier, node:test, unittest
 로컬에서는 `brew install shellcheck ruff` 와 `python3 -m pip install -r tools/requirements.txt` 가 필요합니다.
 GitHub Actions 에서도 같은 `pnpm verify` 를 실행합니다.
 
-앱에서 바로 확인할 때는 `pnpm link ~/codes/oube-release` 를 사용합니다. EAS 빌드는 링크를 인식하지 못하므로 빌드 전에 태그 참조로 되돌려야 합니다.
+릴리스 전의 코드를 앱에서 확인할 때 `pnpm link` 는 쓰지 않습니다. hoisted 설치에서 링크를 걸고 푸는 과정이 이 저장소의
+`node_modules` 를 지우거나 앱의 `node_modules/@oube` 안에 옛 패키지를 남겨 pod install 을 깨뜨립니다. 대신 앱 폴더에서
+이 저장소의 실행 파일을 직접 실행합니다.
+
+```bash
+node ~/codes/oube-release/bin/oube-release.js screenshots run --device iphone --locale ko
+```
+
+fastlane 레인은 앱의 `fastlane/Fastfile` 이 import 하는 경로를 이 저장소의 `tools/fastlane/Fastfile` 로 잠시 바꿔 확인한 뒤 되돌립니다.
 
 ## 릴리스
 
