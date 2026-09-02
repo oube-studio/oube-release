@@ -26,4 +26,5 @@ App Store 문구는 `{locale}/` 에, Google Play 문구는 `android/{locale}/` �
 ## 스크린샷
 
 `pnpm oube-release screenshots all` 을 실행하면 시뮬레이터 빌드, 장면 캡처, 베젤 합성을 한 번에 처리합니다.
-결과물은 `store-assets/final/` 에 생성됩니다. 스토어 업로드는 아직 자동화되지 않아 콘솔에서 직접 올려야 합니다.
+결과물은 `store-assets/final/` 에 생성되고, `fastlane upload_screenshots` 가 두 스토어에 올립니다.
+스크린샷이 바뀐 출시에서만 실행하면 됩니다.

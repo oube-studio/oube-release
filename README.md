@@ -35,6 +35,7 @@ pnpm oube-release init  # fastlane/, 스토어 문구 폴더, 스크린샷 라�
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `fastlane beta`                                                 | 프로덕션 빌드를 만들어 TestFlight 와 Play 내부 테스트 트랙에 업로드합니다                   |
 | `fastlane release [iap:true]`                                   | 스토어 문구를 업로드하고 iOS 심사 제출과 Play 프로덕션 승격까지 진행합니다                  |
+| `fastlane upload_screenshots [platform:ios\|android]`           | `store-assets/final/` 의 스크린샷을 두 스토어에 업로드합니다 (스크린샷이 바뀐 출시에서만)   |
 | `pnpm oube-release screenshots all`                             | 모든 기기와 언어의 스크린샷을 생성합니다 (시뮬레이터 빌드, 캡처, 합성)                      |
 | `pnpm oube-release screenshots run --device iphone --locale ko` | 특정 기기와 언어의 스크린샷만 생성합니다 (`--skip-build` 로 빌드 생략)                      |
 | `pnpm oube-release screenshots build\|capture\|compose`         | 각 단계를 따로 실행합니다                                                                   |
@@ -55,7 +56,10 @@ fastlane 명령어는 앱 폴더에서 실행합니다. 앱의 `fastlane/Fastfil
 {
   "scheme": "huddle", // app.json 의 scheme. 스크린샷 장면을 여는 딥링크에 사용
   "ios": { "bundleId": "studio.oube.huddle" },
-  "android": { "package": "studio.oube.huddle" },
+  "android": {
+    "package": "studio.oube.huddle",
+    "featureGraphic": "store-assets/play-feature-1024x500.png", // 있으면 upload_screenshots 가 Play 그래픽도 올림
+  },
   "build": "local", // local 또는 eas-cloud
   "iap": false, // true 면 init 이 fastlane/iap-products.json 원고를 생성
   "locales": {

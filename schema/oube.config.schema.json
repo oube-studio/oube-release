@@ -21,7 +21,13 @@
       "type": "object",
       "required": ["package"],
       "additionalProperties": false,
-      "properties": { "package": { "type": "string" } }
+      "properties": {
+        "package": { "type": "string" },
+        "featureGraphic": {
+          "type": "string",
+          "description": "Play 피처 그래픽(1024x500) 파일 경로. 지정하면 upload_screenshots 가 스크린샷과 함께 올린다"
+        }
+      }
     },
     "build": {
       "type": "string",

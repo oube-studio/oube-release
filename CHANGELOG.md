@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+
+- `fastlane upload_screenshots` 레인을 추가했습니다. `store-assets/final/` 의 스크린샷을 App Store 와 Google Play 에 언어별로 업로드하고, `android.featureGraphic` 을 지정하면 Play 피처 그래픽도 함께 올립니다. iOS 는 기존 장을 지우고 새로 올리며, Android 는 바뀐 장만 올리고 로컬에 없는 장은 지워 스토어를 로컬 파일과 일치시킵니다.
+
 ## 0.3.2
 
 - 캡처가 첫 딥링크를 열기 전에 앱을 새로 실행해 안정될 때까지 기다립니다. SpringBoard 재시작으로 앱이 종료된 채 첫 장면을 열면 스플래시가 캡처에 찍히던 문제를 고쳤습니다.

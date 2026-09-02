@@ -18,5 +18,5 @@ App Store 와 Google Play 에 게시하는 문구의 원본입니다. 항목 하
 - 스토어 반영 후 비교: `pnpm oube-release metadata verify`
 - 인앱 상품 이름과 설명의 원본: `../iap-products.json` (인앱 상품이 있는 앱만)
 
-스크린샷과 그래픽 원본은 `store-assets/` 에 있습니다. Google Play 에 올릴 이미지는 `android/{locale}/images/` 에 복사한 뒤
-업로드하며, 이 폴더는 `.gitignore` 에 포함되어 있습니다.
+스크린샷과 그래픽 원본은 `store-assets/` 에 있습니다. `fastlane upload_screenshots` 가 두 스토어에 올리며,
+Google Play 쪽 배열 경로인 `android/{locale}/images/` 는 `.gitignore` 에 포함되어 있습니다.
