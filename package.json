@@ -1,6 +1,6 @@
 {
   "name": "@oube/release",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "oube Expo 앱들이 공유하는 스토어 출시 도구 (fastlane 레인, 스크린샷 자동화, 스토어 문구 검사)",
   "license": "MIT",
   "repository": "github:oube-studio/oube-release",

@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 0.5.0
 
 - `android.featureGraphic` 경로에 `{locale}` 을 넣으면 언어별 피처 그래픽을 올립니다. 파일이 없는 언어가 있으면 업로드 전에 멈춥니다.
 - 빌드 방식 설정 `build` 를 없앴습니다. 스튜디오 표준인 로컬 빌드(`eas build --local`)만 지원합니다. 설정 파일에 `build` 키가 남아 있으면 지워 주세요.
