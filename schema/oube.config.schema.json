@@ -25,15 +25,9 @@
         "package": { "type": "string" },
         "featureGraphic": {
           "type": "string",
-          "description": "Play 피처 그래픽(1024x500) 파일 경로. 지정하면 upload_screenshots 가 스크린샷과 함께 올린다"
+          "description": "Play 피처 그래픽(1024x500) 파일 경로. {locale} 을 넣으면 언어별 파일을 쓴다. 지정하면 upload_screenshots 가 스크린샷과 함께 올린다"
         }
       }
-    },
-    "build": {
-      "type": "string",
-      "enum": ["local", "eas-cloud"],
-      "default": "local",
-      "description": "beta 레인이 빌드하는 방식. local 은 이 Mac 에서 eas build --local, eas-cloud 는 EAS 서버에서 빌드한 파일을 내려받는다"
     },
     "iap": {
       "type": "boolean",

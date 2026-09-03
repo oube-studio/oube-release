@@ -68,7 +68,7 @@ def check_app_store(meta: Path, config: dict, version: str) -> tuple[int, int]:
             continue
         # 지역이 처리 중이거나 그 지역에 출시하지 않았으면 결과가 없다. 문구가 다른 것이 아니므로 실패로 세지 않는다
         if not data.get("resultCount"):
-            print("    없음  이 스토어프런트에 게시된 앱이 없습니다 (지역이 처리 중이거나 미출시면 정상)")
+            print("    없음  이 국가의 App Store 에 게시된 앱이 없습니다 (처리 중이거나 출시하지 않은 지역이면 정상)")
             skipped += 1
             continue
         result = data["results"][0]

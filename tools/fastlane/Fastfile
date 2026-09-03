@@ -10,7 +10,6 @@ ASC_KEY = File.join(ROOT, "fastlane", "asc-api-key.json.key")
 PLAY_KEY = File.join(ROOT, "fastlane", "play-service-account.json.key")
 BUNDLE_ID = CONFIG.fetch("ios").fetch("bundleId")
 PACKAGE = CONFIG.fetch("android").fetch("package")
-BUILD_MODE = CONFIG.fetch("build", "local")
 
 desc "프로덕션 빌드를 만들어 TestFlight 와 Play 내부 테스트 트랙에 업로드합니다"
 lane :beta do
@@ -81,20 +80,9 @@ lane :upload_screenshots do |options|
   upload_android_screenshots if %w[all android].include?(platform)
 end
 
-# 프로덕션 빌드 파일을 output 경로에 만든다. local 은 이 Mac 에서 빌드하고, eas-cloud 는 EAS 가 빌드한 파일을 내려받는다.
+# 프로덕션 빌드 파일을 output 경로에 만든다. 이 Mac 에서 eas build --local 로 빌드하며, 끝날 때까지 기다리고 실패하면 레인이 멈춘다
 def build_artifact(platform, output)
-  case BUILD_MODE
-  when "local"
-    sh("cd #{ROOT} && #{clean_shell_env} eas build --platform #{platform} --profile production --local --non-interactive --output #{output}")
-  when "eas-cloud"
-    # --json 이면 빌드 로그는 stderr, 결과 JSON 만 stdout 으로 온다
-    json = sh("cd #{ROOT} && #{clean_shell_env} eas build --platform #{platform} --profile production --non-interactive --wait --json", log: false)
-    url = JSON.parse(json).first&.dig("artifacts", "buildUrl")
-    UI.user_error!("EAS 빌드 결과 파일의 URL 을 찾을 수 없습니다") unless url
-    sh("curl -fsSL -o #{output} #{url}")
-  else
-    UI.user_error!("oube.config.json 의 build 값이 잘못됐습니다: #{BUILD_MODE} (local | eas-cloud)")
-  end
+  sh("cd #{ROOT} && #{clean_shell_env} eas build --platform #{platform} --profile production --local --non-interactive --output #{output}")
 end
 
 # fastlane 이 심는 루비 환경이 eas 의 CocoaPods 와 fastlane 런타임 검사를 오염시켜서,
@@ -196,7 +184,7 @@ def each_final_set
   end
 end
 
-# iOS: deliver 는 언어 폴더 하나에 든 이미지를 해상도로 기기 구분한다. 리포 밖 임시 폴더에
+# iOS: deliver 는 언어 폴더 하나에 든 이미지를 해상도로 기기를 구분한다. 저장소 밖 임시 폴더에
 # <App Store 언어>/<기기>-<파일명> 으로 모아 전달한다 (기기 접두사가 정렬 순서까지 지켜 준다).
 def upload_ios_screenshots
   require "tmpdir"
@@ -212,7 +200,7 @@ def upload_ios_screenshots
   end
   UI.message("iOS 스크린샷 #{count} 장 업로드 시작")
   # overwrite_screenshots 가 없으면 기존 장을 교체하지 않는다.
-  # skip_screenshots 는 Deliverfile 의 기본값(true)을 이 레인에서만 뒤집는다.
+  # skip_screenshots 는 Deliverfile 에서 true 로 두고 있어 이 레인에서만 false 로 바꾼다.
   deliver(
     app_identifier: BUNDLE_ID,
     api_key_path: ASC_KEY,
@@ -229,35 +217,38 @@ ensure
   FileUtils.remove_entry(staged) if staged
 end
 
-# Play 스크린샷 슬롯과 기기 이름의 대응. 앱들의 기기 키는 iphone, ipad 로 통일되어 있다.
+# Play 스크린샷 종류(휴대전화, 10인치 태블릿)와 기기 이름의 대응. 앱들의 기기 키는 iphone, ipad 로 통일되어 있다.
 PLAY_SCREENSHOT_DIRS = { "iphone" => "phoneScreenshots", "ipad" => "tenInchScreenshots" }.freeze
 
 def play_images_dir(codes)
   File.join(ROOT, "fastlane", "metadata", "android", codes.fetch("play"), "images")
 end
 
-# Android: supply 는 fastlane/metadata/android/<언어>/images/ 를 읽는다. 이 경로는 ignore 에
-# 들어 있어 리포를 더럽히지 않는다. 이전 배열이 섞이지 않게 슬롯을 비우고 새로 채운다.
+# Android: supply 는 fastlane/metadata/android/<언어>/images/ 를 읽는다. 이 경로는 .gitignore 에
+# 들어 있어 저장소에 흔적이 남지 않는다. 이전에 복사해 둔 파일이 섞이지 않게 폴더를 비우고 새로 채운다.
 def upload_android_screenshots
   count = 0
   each_final_set do |codes, device, files|
     slot = PLAY_SCREENSHOT_DIRS[device]
-    UI.user_error!("Play 스크린샷 슬롯을 모르는 기기입니다: #{device} (iphone | ipad)") unless slot
+    UI.user_error!("Play 스크린샷 종류가 정해지지 않은 기기입니다: #{device} (iphone, ipad 만 지원)") unless slot
     dest = File.join(play_images_dir(codes), slot)
     FileUtils.rm_rf(dest)
     FileUtils.mkdir_p(dest)
     files.each { |png| FileUtils.cp(png, dest) }
     count += files.length
   end
+  # {locale} 이 있으면 언어별 파일을, 없으면 한 파일을 모든 언어에 쓴다
   feature = CONFIG.dig("android", "featureGraphic")
   if feature
-    CONFIG.fetch("locales").each_value do |codes|
+    CONFIG.fetch("locales").each do |locale, codes|
+      src = File.join(ROOT, feature.gsub("{locale}", locale))
+      UI.user_error!("Play 피처 그래픽이 없습니다: #{src}") unless File.exist?(src)
       FileUtils.mkdir_p(play_images_dir(codes))
-      FileUtils.cp(File.join(ROOT, feature), File.join(play_images_dir(codes), "featureGraphic.png"))
+      FileUtils.cp(src, File.join(play_images_dir(codes), "featureGraphic.png"))
     end
   end
   UI.message("Android 스크린샷 #{count} 장 업로드 시작")
-  # sync_image_upload 는 파일이 있는 슬롯에서 바뀐 장만 올리고 로컬에 없는 장은 지워 스토어를 로컬과 일치시킨다
+  # sync_image_upload 는 파일이 있는 종류에서 바뀐 장만 올리고 로컬에 없는 장은 지워 스토어를 로컬과 일치시킨다
   supply(
     package_name: PACKAGE,
     json_key: PLAY_KEY,

@@ -2,7 +2,6 @@
   "scheme": "<scheme>",
   "ios": { "bundleId": "<ios bundle id>" },
   "android": { "package": "<android package>" },
-  "build": "local",
   "iap": false,
   "locales": {
     "ko": { "appStore": "ko", "play": "ko-KR", "storefront": "kr", "hl": "ko" },
